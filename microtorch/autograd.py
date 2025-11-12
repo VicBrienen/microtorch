@@ -10,6 +10,13 @@ class Operation:
     def cache_for_backward(self, *xs):
         self.forward_cache = xs
 
+class Add(Operation):
+    def forward(self, a, b):
+        return a + b
+    
+    def backward(self, grad_output):
+        return grad_output, grad_output
+
 def apply(operation, *parents, **attributes):
     op = operation(*parents, **attributes)                              # creates operation object
     input = [tensor.data for tensor in parents]                         # extract operation inputs from parent tensors as raw numpy arrays
