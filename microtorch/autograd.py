@@ -55,6 +55,13 @@ class ReLU(Operation):
     def backward(self, upstream_grad):
         (a,) = self.forward_cache       # unpack 1-tuple
         return upstream_grad * (a > 0)
+    
+class Neg(Operation):
+    def forward(self, a):
+        return -a
+    
+    def backward(self, upstream_grad):
+        return - upstream_grad
 
 def apply(operation, *parents, **attributes):
     op = operation(*parents, **attributes)                              # creates operation object
