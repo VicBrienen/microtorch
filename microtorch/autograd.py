@@ -38,6 +38,14 @@ class MatMul(Operation):
         grad_a = upstream_grad @ b.T
         grad_b = a.T @ upstream_grad    # derivative w.r.t. b before upstream_grad because matrix multiplication is not commutative
         return grad_a, grad_b
+    
+class Sum(Operation):
+    def forward(self, a):
+        self.attributes = a.shape # store shape as attribute
+        return a.sum()
+    
+    def backward(self, upstream_grad):
+        return np.ones(self.attributes) * upstream_grad # create matrix of original size with copies of upstream gradients
 
 def apply(operation, *parents, **attributes):
     op = operation(*parents, **attributes)                              # creates operation object
