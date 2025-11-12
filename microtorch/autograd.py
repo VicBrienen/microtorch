@@ -27,6 +27,17 @@ class Mul(Operation):
         grad_a = upstream_grad * b
         grad_b = upstream_grad * a
         return grad_a, grad_b
+    
+class MatMul(Operation):
+    def forward(self, a, b):
+        self.cache_for_backward(a, b)
+        return a @ b
+    
+    def backward(self, upstream_grad):
+        a, b = self.forward_cache
+        grad_a = upstream_grad @ b.T
+        grad_b = a.T @ upstream_grad    # derivative w.r.t. b before upstream_grad because matrix multiplication is not commutative
+        return grad_a, grad_b
 
 def apply(operation, *parents, **attributes):
     op = operation(*parents, **attributes)                              # creates operation object
