@@ -14,8 +14,19 @@ class Add(Operation):
     def forward(self, a, b):
         return a + b
     
-    def backward(self, grad_output):
-        return grad_output, grad_output
+    def backward(self, upstream_grad):
+        return upstream_grad, upstream_grad
+    
+class Mul(Operation):
+    def forward(self, a, b):
+        self.cache_for_backward(a, b)
+        return a * b
+    
+    def backward(self, upstream_grad):
+        a, b = self.forward_cache
+        grad_a = upstream_grad * b
+        grad_b = upstream_grad * a
+        return grad_a, grad_b
 
 def apply(operation, *parents, **attributes):
     op = operation(*parents, **attributes)                              # creates operation object
