@@ -89,6 +89,27 @@ class Pow(Operation):
         grad_a = upstream_grad * exponent * (a ** (exponent - 1))
         return (grad_a,)
 
+class Exp(Operation):
+    def forward(self, a):
+        out = np.exp(a)
+        self.cache_for_backward(out)
+        return out
+    
+    def backward(self, upstream_grad):
+        (out,) = self.forward_cache
+        grad_a = upstream_grad * out
+        return grad_a
+    
+class Log(Operation):
+    def forward(self, a):
+        self.cache_for_backward(a)
+        return np.log(a)
+    
+    def backward(self, upstream_grad):
+        (a,) = self.forward_cache
+        grad_a = upstream_grad / a
+        return (grad_a,)
+
 class ReLU(Operation):
     def forward(self, a):
         self.cache_for_backward(a)

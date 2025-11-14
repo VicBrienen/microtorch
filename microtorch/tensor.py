@@ -48,6 +48,9 @@ class Tensor:
     
     def __radd__(self, other):
         return self.__add__(other)
+    
+    def sum(self):
+        return apply(ag.Sum, self)
 
     def __mul__(self, other):
         return apply(ag.Mul, self, self.ensure_tensor(other))
@@ -58,14 +61,14 @@ class Tensor:
     def __matmul__(self, other):
         return apply(ag.MatMul, self, self.ensure_tensor(other))
     
-    def __pow__(self, exponent):
-        return apply(ag.Pow, self, exponent=exponent)
-    
     def __truediv__(self, other):
         return self * (self.ensure_tensor(other) ** -1)
     
     def __rtruediv__(self, other):
         return self.ensure_tensor(other) * (self ** -1)
+    
+    def __pow__(self, exponent):
+        return apply(ag.Pow, self, exponent=exponent)
 
     def __neg__(self):
         return apply(ag.Neg, self)
@@ -75,9 +78,12 @@ class Tensor:
     
     def __rsub__(self, other):
         return self.ensure_tensor(other) + (-self)
-
-    def sum(self):
-        return apply(ag.Sum, self)
+    
+    def exp(self):
+        return apply(ag.Exp, self)
+    
+    def log(self):
+        return apply(ag.Log, self)
 
     def relu(self):
         return apply(ag.ReLU, self)
