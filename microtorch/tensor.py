@@ -37,20 +37,26 @@ class Tensor:
                     else:
                         parent_tensor.grad += parent_grad
 
+    def ensure_tensor(self, other):
+        if isinstance(other, Tensor):
+            return
+        else:
+            return  Tensor(other, dtype=self.dtype)
+
     def __add__(self, other):
-        return apply(ag.Add, self, other)
+        return apply(ag.Add, self, self.ensure_tensor(other))
 
     def __mul__(self, other):
-        return apply(ag.Mul, self, other)
+        return apply(ag.Mul, self, self.ensure_tensor(other))
 
     def __matmul__(self, other):
-        return apply(ag.MatMul, self, other)
+        return apply(ag.MatMul, self, self.ensure_tensor(other))
 
     def __neg__(self):
         return apply(ag.Neg, self)
 
     def __sub__(self, other):
-        return apply(ag.Add, self, ag.apply(ag.Neg, other))
+        return apply(ag.Add, self, ag.apply(ag.Neg, self.ensure_tensor(other)))
 
     def sum(self):
         return apply(ag.Sum, self)
