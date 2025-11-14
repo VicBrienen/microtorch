@@ -41,19 +41,19 @@ class MatMul(Operation):
 class Sum(Operation):
     def forward(self, a):
         self.attributes = a.shape       # store shape as attribute
-        return (a.sum(),)
+        return a.sum(),
     
     def backward(self, upstream_grad):
-        return np.ones(self.attributes) * upstream_grad # create matrix of original size with copies of upstream gradients
+        return (np.ones(self.attributes, dtype=upstream_grad.dtype) * upstream_grad,) # create matrix of original size with copies of upstream gradients
     
 class ReLU(Operation):
     def forward(self, a):
         self.cache_for_backward(a)
-        return (np.maximum(0, a),)
+        return np.maximum(0, a)
     
     def backward(self, upstream_grad):
         (a,) = self.forward_cache       # unpack 1-tuple
-        return upstream_grad * (a > 0)
+        return (upstream_grad * (a > 0),)
     
 class Neg(Operation):
     def forward(self, a):
