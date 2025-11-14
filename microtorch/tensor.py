@@ -46,26 +46,17 @@ class Tensor:
     def __add__(self, other):
         return apply(ag.Add, self, self.ensure_tensor(other))
     
-    def __radd__(self, other):
-        return self.__add__(other)
-    
     def sum(self):
         return apply(ag.Sum, self)
 
     def __mul__(self, other):
         return apply(ag.Mul, self, self.ensure_tensor(other))
-    
-    def __rmul__(self, other):
-        return self.__mul__(other)
 
     def __matmul__(self, other):
         return apply(ag.MatMul, self, self.ensure_tensor(other))
     
     def __truediv__(self, other):
         return self * (self.ensure_tensor(other) ** -1)
-    
-    def __rtruediv__(self, other):
-        return self.ensure_tensor(other) * (self ** -1)
     
     def __pow__(self, exponent):
         return apply(ag.Pow, self, exponent=exponent)
@@ -76,9 +67,6 @@ class Tensor:
     def __sub__(self, other):
         return apply(ag.Add, self, apply(ag.Neg, self.ensure_tensor(other)))
     
-    def __rsub__(self, other):
-        return self.ensure_tensor(other) + (-self)
-    
     def exp(self):
         return apply(ag.Exp, self)
     
@@ -87,6 +75,18 @@ class Tensor:
     
     def max(self, axis=None, keepdims=False):
         return apply(ag.Max, self, axis=axis, keepdims=keepdims)
+    
+    def __radd__(self, other):
+        return self.__add__(other)
+    
+    def __rmul__(self, other):
+        return self.__mul__(other)
+    
+    def __rtruediv__(self, other):
+        return self.ensure_tensor(other) * (self ** -1)
+    
+    def __rsub__(self, other):
+        return self.ensure_tensor(other) + (-self)
     
 def apply(operation, *parents, **attributes):
     op = operation(*parents, **attributes)                              # creates operation object
