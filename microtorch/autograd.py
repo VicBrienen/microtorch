@@ -111,12 +111,46 @@ class Log(Operation):
         (a,) = self.forward_cache
         grad_a = upstream_grad / a
         return (grad_a,)
-
-class ReLU(Operation):
+    
+class Max(Operation):
     def forward(self, a):
-        self.cache_for_backward(a)
-        return np.maximum(0, a)
+        # write attributes and forward cache
+        axis = self.attributes.setdefault("axis", None)
+        keepdims = self.attributes.setdefault("keepdims", False)
+        self.attributes["input_shape"] = a.shape
+        out = np.max(a, axis=axis, keepdims=keepdims)
+        self.cache_for_backward(a, out)
+        return out
     
     def backward(self, upstream_grad):
-        (a,) = self.forward_cache       # unpack 1-tuple
-        return (upstream_grad * (a > 0),)
+        # read attributes and forward cache
+        a, out = self.forward_cache
+        axis = self.attributes["axis"]
+        keepdims = self.attributes["keepdims"]
+        input_shape = self.attributes["input_shape"]
+
+        # broadcast max values back to input shape
+        if axis is None:
+            max_keep = out
+        else:
+            if keepdims:
+                max_keep = out
+            else:
+                max_keep = np.expand_dims(out, axis=axis)
+        max_keep = np.broadcast_to(max_keep, input_shape)
+
+        mask = (a == max_keep) # build mask of max positions
+
+        # broadcast upsteam gradient back to input shape
+        if axis is None:
+            grad_expanded = upstream_grad
+        else:
+            if keepdims:
+                grad_expanded = upstream_grad
+            else:
+                grad_expanded = np.expand_dims(upstream_grad, axis=axis)
+        grad_expanded = np.broadcast_to(grad_expanded, input_shape)
+
+        # route gradients only trough max entries
+        grad_a = grad_expanded * mask
+        return (grad_a,)

@@ -25,7 +25,7 @@ class Tensor:
         build(self)                                                     # start from the tensor .backward() is called on
 
         # perform reverse mode automatic differentiation a.k.a. backpropagation
-        self.grad = np.array(1.0, dtype=self.dtype) # seed gradient at the root (loss)
+        self.grad = np.ones_like(self.data, dtype=self.dtype) # seed gradient at the root (loss)
         for tensor in reversed(topo): # reverse ordering such that we start at the loss
             operation = tensor.grad_fn # extract specific operation
             for parent_tensor, parent_grad in zip(operation.parents, operation.backward(tensor.grad)): # compute downstream gradients and loop over parent-gradient pairs
@@ -84,9 +84,9 @@ class Tensor:
     
     def log(self):
         return apply(ag.Log, self)
-
-    def relu(self):
-        return apply(ag.ReLU, self)
+    
+    def max(self, axis=None, keepdims=False):
+        return apply(ag.Max, self, axis=axis, keepdims=keepdims)
     
 def apply(operation, *parents, **attributes):
     op = operation(*parents, **attributes)                              # creates operation object
