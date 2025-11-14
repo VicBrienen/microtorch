@@ -19,7 +19,7 @@ def sum_to_shape(grad, shape):
 
     for i, (gdim, sdim) in enumerate(zip(grad.shape, shape)):
         if sdim == 1 and gdim != 1:
-            grad = grad.sum(axis=i, keepdim=True)
+            grad = grad.sum(axis=i, keepdims=True)
 
     return grad.reshape(shape)
 
@@ -60,7 +60,7 @@ class MatMul(Operation):
 class Sum(Operation):
     def forward(self, a):
         self.attributes = a.shape       # store shape as attribute
-        return a.sum(),
+        return a.sum()
     
     def backward(self, upstream_grad):
         return (np.ones(self.attributes, dtype=upstream_grad.dtype) * upstream_grad,) # create matrix of original size with copies of upstream gradients
