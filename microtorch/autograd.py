@@ -9,12 +9,31 @@ class Operation:
     def cache_for_backward(self, *xs):
         self.forward_cache = xs
 
+def sum_to_shape(grad, shape):
+    shape = tuple(shape)
+    if grad.shape == shape:
+        return grad
+    
+    while len(grad.shape) > len(shape):
+        grad = grad.sum(axis=0)
+
+    for i, (gdim, sdim) in enumerate(zip(grad.shape, shape)):
+        if sdim == 1 and gdim != 1:
+            grad = grad.sum(axis=i, keepdim=True)
+
+    return grad.reshape(shape)
+
 class Add(Operation):
     def forward(self, a, b):
         return a + b
     
     def backward(self, upstream_grad):
-        return upstream_grad, upstream_grad
+        a_tensor, b_tensor = self.parents
+        a_shape = a_tensor.data.shape
+        b_shape = b_tensor.data.shape
+        grad_a = sum_to_shape(upstream_grad, a_shape)
+        grad_b = sum_to_shape(upstream_grad, b_shape)
+        return grad_a, grad_b
     
 class Mul(Operation):
     def forward(self, a, b):
