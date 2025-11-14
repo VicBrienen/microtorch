@@ -38,22 +38,31 @@ class Tensor:
                         parent_tensor.grad += parent_grad
 
     def __add__(self, other):
-        return ag.apply(ag.Add, self, other)
+        return apply(ag.Add, self, other)
 
     def __mul__(self, other):
-        return ag.apply(ag.Mul, self, other)
+        return apply(ag.Mul, self, other)
 
     def __matmul__(self, other):
-        return ag.apply(ag.MatMul, self, other)
+        return apply(ag.MatMul, self, other)
 
     def __neg__(self):
-        return ag.apply(ag.Neg, self)
+        return apply(ag.Neg, self)
 
     def __sub__(self, other):
-        return ag.apply(ag.Add, self, ag.apply(ag.Neg, other))
+        return apply(ag.Add, self, ag.apply(ag.Neg, other))
 
     def sum(self):
-        return ag.apply(ag.Sum, self)
+        return apply(ag.Sum, self)
 
     def relu(self):
-        return ag.apply(ag.ReLU, self)
+        return apply(ag.ReLU, self)
+    
+def apply(operation, *parents, **attributes):
+    op = operation(*parents, **attributes)                              # creates operation object
+    input = [tensor.data for tensor in parents]                         # extract operation inputs from parent tensors as raw numpy arrays
+    requires_grad = any(tensor.requires_grad for tensor in parents)     # determine if any parent requires a gradient
+    output = Tensor(op.forward(*input), requires_grad=requires_grad)    # wrap result in a tensor
+    if requires_grad:
+        output.grad_fn = op # store operation that created output tensor
+    return output
