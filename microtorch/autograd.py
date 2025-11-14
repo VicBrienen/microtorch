@@ -57,6 +57,8 @@ class Mul(Operation):
         a, b = self.forward_cache
         grad_a = upstream_grad * b
         grad_b = upstream_grad * a
+        grad_a = sum_to_shape(grad_a, a.shape)
+        grad_b = sum_to_shape(grad_b, b.shape)
         return grad_a, grad_b
     
 class MatMul(Operation):
@@ -98,7 +100,7 @@ class Exp(Operation):
     def backward(self, upstream_grad):
         (out,) = self.forward_cache
         grad_a = upstream_grad * out
-        return grad_a
+        return (grad_a,)
     
 class Log(Operation):
     def forward(self, a):
