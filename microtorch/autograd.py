@@ -37,11 +37,16 @@ class Add(Operation):
     
 class Sum(Operation):
     def forward(self, a):
-        self.attributes = a.shape       # store shape as attribute
-        return a.sum()
+        axis = self.attributes.get("axis", None)
+        keepdims = self.attributes.get("keepdims", False)
+        self.input_shape = a.shape
+        self.axis = axis
+        self.keepdims = keepdims
+        return a.sum(axis=axis, keepdims=keepdims)
     
     def backward(self, upstream_grad):
-        return (np.ones(self.attributes, dtype=upstream_grad.dtype) * upstream_grad,) # create matrix of original size with copies of upstream gradients
+        grad_a = np.ones(self.input_shape, dtype=upstream_grad.dtype) * upstream_grad
+        return (grad_a,) # create matrix of original size with copies of upstream gradients
     
 class Mul(Operation):
     def forward(self, a, b):
