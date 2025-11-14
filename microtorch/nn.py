@@ -14,3 +14,7 @@ class Linear:
     
     def parameters(self):
         return [self.w, self.b]
+
+class ReLU:
+    def __call__(self, x):
+        return x.relu()
