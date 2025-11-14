@@ -35,6 +35,14 @@ class Add(Operation):
         grad_b = sum_to_shape(upstream_grad, b_shape)
         return grad_a, grad_b
     
+class Sum(Operation):
+    def forward(self, a):
+        self.attributes = a.shape       # store shape as attribute
+        return a.sum()
+    
+    def backward(self, upstream_grad):
+        return (np.ones(self.attributes, dtype=upstream_grad.dtype) * upstream_grad,) # create matrix of original size with copies of upstream gradients
+    
 class Mul(Operation):
     def forward(self, a, b):
         self.cache_for_backward(a, b)
@@ -57,14 +65,25 @@ class MatMul(Operation):
         grad_b = a.T @ upstream_grad    # derivative w.r.t. b before upstream_grad because matrix multiplication is not commutative
         return grad_a, grad_b
     
-class Sum(Operation):
+class Neg(Operation):
     def forward(self, a):
-        self.attributes = a.shape       # store shape as attribute
-        return a.sum()
+        return -a
     
     def backward(self, upstream_grad):
-        return (np.ones(self.attributes, dtype=upstream_grad.dtype) * upstream_grad,) # create matrix of original size with copies of upstream gradients
+        return (- upstream_grad,)
+
+class Pow(Operation):
+    def forward(self, a):
+        exponent = self.attributes["exponent"]
+        self.cache_for_backward(a)
+        return a ** exponent
     
+    def backward(self, upstream_grad):
+        (a,) = self.forward_cache
+        exponent = self.attributes["exponent"]
+        grad_a = upstream_grad * exponent * (a ** (exponent - 1))
+        return (grad_a,)
+
 class ReLU(Operation):
     def forward(self, a):
         self.cache_for_backward(a)
@@ -73,11 +92,3 @@ class ReLU(Operation):
     def backward(self, upstream_grad):
         (a,) = self.forward_cache       # unpack 1-tuple
         return (upstream_grad * (a > 0),)
-    
-class Neg(Operation):
-    def forward(self, a):
-        return -a
-    
-    def backward(self, upstream_grad):
-        return (- upstream_grad,)
-
