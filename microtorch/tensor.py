@@ -39,7 +39,7 @@ class Tensor:
 
     def ensure_tensor(self, other):
         if isinstance(other, Tensor):
-            return
+            return other
         else:
             return  Tensor(other, dtype=self.dtype)
 
@@ -56,7 +56,7 @@ class Tensor:
         return apply(ag.Neg, self)
 
     def __sub__(self, other):
-        return apply(ag.Add, self, ag.apply(ag.Neg, self.ensure_tensor(other)))
+        return apply(ag.Add, self, apply(ag.Neg, self.ensure_tensor(other)))
 
     def sum(self):
         return apply(ag.Sum, self)
