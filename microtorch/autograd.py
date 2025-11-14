@@ -13,14 +13,11 @@ def sum_to_shape(grad, shape):
     shape = tuple(shape)
     if grad.shape == shape:
         return grad
-    
     while len(grad.shape) > len(shape):
         grad = grad.sum(axis=0)
-
     for i, (gdim, sdim) in enumerate(zip(grad.shape, shape)):
         if sdim == 1 and gdim != 1:
             grad = grad.sum(axis=i, keepdims=True)
-
     return grad.reshape(shape)
 
 class Add(Operation):
@@ -35,19 +32,6 @@ class Add(Operation):
         grad_b = sum_to_shape(upstream_grad, b_shape)
         return grad_a, grad_b
     
-class Sum(Operation):
-    def forward(self, a):
-        axis = self.attributes.get("axis", None)
-        keepdims = self.attributes.get("keepdims", False)
-        self.input_shape = a.shape
-        self.axis = axis
-        self.keepdims = keepdims
-        return a.sum(axis=axis, keepdims=keepdims)
-    
-    def backward(self, upstream_grad):
-        grad_a = np.ones(self.input_shape, dtype=upstream_grad.dtype) * upstream_grad
-        return (grad_a,) # create matrix of original size with copies of upstream gradients
-    
 class Mul(Operation):
     def forward(self, a, b):
         self.cache_for_backward(a, b)
@@ -60,24 +44,6 @@ class Mul(Operation):
         grad_a = sum_to_shape(grad_a, a.shape)
         grad_b = sum_to_shape(grad_b, b.shape)
         return grad_a, grad_b
-    
-class MatMul(Operation):
-    def forward(self, a, b):
-        self.cache_for_backward(a, b)
-        return a @ b
-    
-    def backward(self, upstream_grad):
-        a, b = self.forward_cache
-        grad_a = upstream_grad @ b.T
-        grad_b = a.T @ upstream_grad    # derivative w.r.t. b before upstream_grad because matrix multiplication is not commutative
-        return grad_a, grad_b
-    
-class Neg(Operation):
-    def forward(self, a):
-        return -a
-    
-    def backward(self, upstream_grad):
-        return (- upstream_grad,)
 
 class Pow(Operation):
     def forward(self, a):
@@ -111,6 +77,30 @@ class Log(Operation):
         (a,) = self.forward_cache
         grad_a = upstream_grad / a
         return (grad_a,)
+    
+class MatMul(Operation):
+    def forward(self, a, b):
+        self.cache_for_backward(a, b)
+        return a @ b
+    
+    def backward(self, upstream_grad):
+        a, b = self.forward_cache
+        grad_a = upstream_grad @ b.T
+        grad_b = a.T @ upstream_grad    # derivative w.r.t. b before upstream_grad because matrix multiplication is not commutative
+        return grad_a, grad_b
+    
+class Sum(Operation):
+    def forward(self, a):
+        axis = self.attributes.get("axis", None)
+        keepdims = self.attributes.get("keepdims", False)
+        self.input_shape = a.shape
+        self.axis = axis
+        self.keepdims = keepdims
+        return a.sum(axis=axis, keepdims=keepdims)
+    
+    def backward(self, upstream_grad):
+        grad_a = np.ones(self.input_shape, dtype=upstream_grad.dtype) * upstream_grad
+        return (grad_a,) # create matrix of original size with copies of upstream gradients
     
 class Max(Operation):
     def forward(self, a):

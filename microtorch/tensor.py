@@ -71,7 +71,7 @@ class Tensor:
         return apply(ag.Pow, self, exponent=exponent)
 
     def __neg__(self):
-        return apply(ag.Neg, self)
+        return apply(ag.Mul, Tensor(-1.0, dtype=self.dtype), self)
 
     def __sub__(self, other):
         return apply(ag.Add, self, apply(ag.Neg, self.ensure_tensor(other)))
