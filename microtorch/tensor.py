@@ -45,15 +45,9 @@ class Tensor:
 
     def __add__(self, other):
         return apply(ag.Add, self, self.ensure_tensor(other))
-    
-    def sum(self):
-        return apply(ag.Sum, self)
 
     def __mul__(self, other):
         return apply(ag.Mul, self, self.ensure_tensor(other))
-
-    def __matmul__(self, other):
-        return apply(ag.MatMul, self, self.ensure_tensor(other))
     
     def __truediv__(self, other):
         return self * (self.ensure_tensor(other) ** -1)
@@ -62,16 +56,22 @@ class Tensor:
         return apply(ag.Pow, self, exponent=exponent)
 
     def __neg__(self):
-        return apply(ag.Mul, Tensor(-1.0, dtype=self.dtype), self)
+        return apply(ag.Mul, self.ensure_tensor(-1.0), self)
 
     def __sub__(self, other):
-        return apply(ag.Add, self, apply(ag.Neg, self.ensure_tensor(other)))
+        return self + (-self.ensure_tensor(other))
     
     def exp(self):
         return apply(ag.Exp, self)
     
     def log(self):
         return apply(ag.Log, self)
+    
+    def sum(self):
+        return apply(ag.Sum, self)
+    
+    def __matmul__(self, other):
+        return apply(ag.MatMul, self, self.ensure_tensor(other))
     
     def max(self, axis=None, keepdims=False):
         return apply(ag.Max, self, axis=axis, keepdims=keepdims)
