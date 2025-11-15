@@ -82,8 +82,10 @@ class MatMul(Operation):
     
     def backward(self, upstream_grad):
         a, b = self.forward_cache
-        grad_a = upstream_grad @ b.T
-        grad_b = a.T @ upstream_grad    # derivative w.r.t. b before upstream_grad because matrix multiplication is not commutative
+        grad_a = np.matmul(upstream_grad, np.swapaxes(b, -1, -2))
+        grad_b = np.matmul(np.swapaxes(a, -1, -2), upstream_grad) # derivative w.r.t. b before upstream_grad because matrix multiplication is not commutative
+        grad_a = sum_to_shape(grad_a, a.shape)
+        grad_b = sum_to_shape(grad_b, b.shape)
         return grad_a, grad_b
     
 class Sum(Operation):
@@ -104,10 +106,10 @@ class Maximum(Operation):
         self.cache_for_backward(a, b)
         return np.maximum(a, b)
     
-    def backward(self, usptream_grad):
+    def backward(self, upstream_grad):
         a, b = self.forward_cache
         mask_a, mask_b = a >= b, a < b
-        grad_a, grad_b = usptream_grad * mask_a, usptream_grad * mask_b
+        grad_a, grad_b = upstream_grad * mask_a, upstream_grad * mask_b
         grad_a, grad_b = sum_to_shape(grad_a, a.shape), sum_to_shape(grad_b, b.shape)
         return grad_a, grad_b
 
