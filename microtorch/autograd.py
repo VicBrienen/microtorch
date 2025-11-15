@@ -98,7 +98,18 @@ class Sum(Operation):
     def backward(self, upstream_grad):
         grad_a = np.ones(self.input_shape, dtype=upstream_grad.dtype) * upstream_grad # create matrix of original size with copies of upstream gradients
         return (grad_a,)
+
+class Maximum(Operation):
+    def forward(self, a, b):
+        self.cache_for_backward(a, b)
+        return np.maximum(a, b)
     
+    def backward(self, usptream_grad):
+        a, b = self.forward_cache
+        mask_a, mask_b = a >= b, a < b
+        grad_a, grad_b = usptream_grad * mask_a, usptream_grad * mask_b
+        return grad_a, grad_b
+
 class Max(Operation):
     def forward(self, a):
         axis = self.attributes.setdefault("axis", None)
