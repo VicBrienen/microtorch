@@ -108,6 +108,7 @@ class Maximum(Operation):
         a, b = self.forward_cache
         mask_a, mask_b = a >= b, a < b
         grad_a, grad_b = usptream_grad * mask_a, usptream_grad * mask_b
+        grad_a, grad_b = sum_to_shape(grad_a, a.shape), sum_to_shape(grad_b, b.shape)
         return grad_a, grad_b
 
 class Max(Operation):
