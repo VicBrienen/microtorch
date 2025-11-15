@@ -1,10 +1,22 @@
 import numpy as np
 
 class Operation:
+    """
+    Base class for atomic differentiable operations from which all other operations can be constructed.
+
+    Args:
+        *parents (Tensor): Input tensors that produced this operations output.
+        **attributes: Static configuration values required by the operation.
+
+    Stored attributes:
+        parents (tuple[Tensor]): References to the input tensors.
+        attributes (dict): Operation specific configuration.
+        forward_cache (tuple): Values needed for gradient computation in .backward().
+    """
     def __init__(self, *parents, **attributes):
-        self.parents = parents                      # reference to input tensors
-        self.forward_cache = ()                     # cached arrays for backward computation
-        self.attributes = attributes                # static operation attributes (e.g. axis, shape)
+        self.parents = parents
+        self.forward_cache = ()
+        self.attributes = attributes
 
     def cache_for_backward(self, *xs):
         self.forward_cache = xs
@@ -26,10 +38,8 @@ class Mul(Operation):
     
     def backward(self, upstream_grad):
         a, b = self.forward_cache
-        grad_a = upstream_grad * b
-        grad_b = upstream_grad * a
-        grad_a = sum_to_shape(grad_a, a.shape)
-        grad_b = sum_to_shape(grad_b, b.shape)
+        grad_a, grad_b = upstream_grad * b, upstream_grad * a
+        grad_a, grad_b = sum_to_shape(grad_a, a.shape), sum_to_shape(grad_b, b.shape)
         return grad_a, grad_b
 
 class Pow(Operation):
