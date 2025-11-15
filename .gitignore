@@ -209,3 +209,6 @@ __marimo__/
 # ignore all notebooks used for testing
 *.ipynb
 .ipynb_checkpoints/
+
+# ignore test model
+model.py
