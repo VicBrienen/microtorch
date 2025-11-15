@@ -96,12 +96,11 @@ class Sum(Operation):
         return a.sum(axis=axis, keepdims=keepdims)
     
     def backward(self, upstream_grad):
-        grad_a = np.ones(self.input_shape, dtype=upstream_grad.dtype) * upstream_grad
-        return (grad_a,) # create matrix of original size with copies of upstream gradients
+        grad_a = np.ones(self.input_shape, dtype=upstream_grad.dtype) * upstream_grad # create matrix of original size with copies of upstream gradients
+        return (grad_a,)
     
 class Max(Operation):
     def forward(self, a):
-        # write attributes and forward cache
         axis = self.attributes.setdefault("axis", None)
         keepdims = self.attributes.setdefault("keepdims", False)
         self.attributes["input_shape"] = a.shape
@@ -110,7 +109,6 @@ class Max(Operation):
         return out
     
     def backward(self, upstream_grad):
-        # read attributes and forward cache
         a, out = self.forward_cache
         axis = self.attributes["axis"]
         keepdims = self.attributes["keepdims"]
