@@ -9,27 +9,14 @@ class Operation:
     def cache_for_backward(self, *xs):
         self.forward_cache = xs
 
-def sum_to_shape(grad, shape):
-    shape = tuple(shape)
-    if grad.shape == shape:
-        return grad
-    while len(grad.shape) > len(shape):
-        grad = grad.sum(axis=0)
-    for i, (gdim, sdim) in enumerate(zip(grad.shape, shape)):
-        if sdim == 1 and gdim != 1:
-            grad = grad.sum(axis=i, keepdims=True)
-    return grad.reshape(shape)
-
 class Add(Operation):
     def forward(self, a, b):
         return a + b
     
     def backward(self, upstream_grad):
         a_tensor, b_tensor = self.parents
-        a_shape = a_tensor.data.shape
-        b_shape = b_tensor.data.shape
-        grad_a = sum_to_shape(upstream_grad, a_shape)
-        grad_b = sum_to_shape(upstream_grad, b_shape)
+        a_shape, b_shape = a_tensor.data.shape, b_tensor.data.shape
+        grad_a, grad_b = sum_to_shape(upstream_grad, a_shape), sum_to_shape(upstream_grad, b_shape)
         return grad_a, grad_b
     
 class Mul(Operation):
@@ -144,3 +131,30 @@ class Max(Operation):
         # route gradients only trough max entries
         grad_a = grad_expanded * mask
         return (grad_a,)
+    
+def sum_to_shape(grad, shape):
+    """
+    Reduce a broadcasted gradient back to the original shape.
+
+    Args:
+    grad (np.ndarray): The upstream gradient received by a tensor
+        after an operation that may have broadcast some inputs.
+    shape (tuple or list): The original shape of the tensor whose
+        gradient we want to compute.
+
+    Returns:
+        np.ndarray: A gradient array reduced to the original tensor shape.
+    """
+    shape = tuple(shape)
+
+    # if shapes already match return the input
+    if grad.shape == shape:
+        return grad
+    
+    # keep reducing while gradient dimensions > original dimensions
+    while len(grad.shape) > len(shape):
+        grad = grad.sum(axis=0)
+    for i, (gdim, sdim) in enumerate(zip(grad.shape, shape)):
+        if sdim == 1 and gdim != 1:
+            grad = grad.sum(axis=i, keepdims=True)
+    return grad.reshape(shape)
