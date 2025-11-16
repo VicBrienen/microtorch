@@ -77,9 +77,6 @@ class Tensor:
     def T(self):
         return apply(ag.Transpose, self)
     
-    def maximum(self, other):
-        return apply(ag.Maximum, self, self.ensure_tensor(other))
-    
     def max(self, axis=None, keepdims=False):
         return apply(ag.Max, self, axis=axis, keepdims=keepdims)
     

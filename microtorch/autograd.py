@@ -90,10 +90,10 @@ class MatMul(Operation):
 
 class Transpose(Operation):
     def forward(self, a):
-        return np.swapaxis(a, -1, -2)
+        return np.swapaxes(a, -1, -2)
     
     def backward(self, upstream_grad):
-        return (np.swapaxis(upstream_grad, -1, -2))
+        return (np.swapaxes(upstream_grad, -1, -2))
     
 class Sum(Operation):
     def forward(self, a):
