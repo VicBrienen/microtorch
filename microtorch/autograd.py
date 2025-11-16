@@ -98,7 +98,16 @@ class Sum(Operation):
         return a.sum(axis=axis, keepdims=keepdims)
     
     def backward(self, upstream_grad):
-        grad_a = np.ones(self.input_shape, dtype=upstream_grad.dtype) * upstream_grad # create matrix of original size with copies of upstream gradients
+        axis, keepdims, input_shape = self.axis, self.keepdims, self.input_shape
+
+        if axis is None:
+            grad_a = upstream_grad
+        else:
+            if not keepdims:
+                grad_a = np.expand_dims(upstream_grad, axis=axis)
+            else:
+                grad_a = upstream_grad
+        grad_a = np.broadcast_to(grad_a, input_shape)
         return (grad_a,)
 
 class Maximum(Operation):
@@ -139,6 +148,7 @@ class Max(Operation):
         max_keep = np.broadcast_to(max_keep, input_shape)
 
         mask = (a == max_keep) # build mask of max positions
+        count = mask.sum(axis=axis, keepdims=True)
 
         # broadcast upsteam gradient back to input shape
         if axis is None:
@@ -151,7 +161,7 @@ class Max(Operation):
         grad_expanded = np.broadcast_to(grad_expanded, input_shape)
 
         # route gradients only trough max entries
-        grad_a = grad_expanded * mask
+        grad_a = mask * (grad_expanded / count)
         return (grad_a,)
     
 def sum_to_shape(grad, shape):
@@ -169,14 +179,11 @@ def sum_to_shape(grad, shape):
     """
     shape = tuple(shape)
 
-    # if shapes already match return the input
-    if grad.shape == shape:
-        return grad
-    
-    # keep reducing while gradient dimensions > original dimensions
-    while len(grad.shape) > len(shape):
+    while grad.ndim > len(shape):
         grad = grad.sum(axis=0)
-    for i, (gdim, sdim) in enumerate(zip(grad.shape, shape)):
-        if sdim == 1 and gdim != 1:
+    
+    for i, sdim in enumerate(shape):
+        if sdim == 1 and grad.shape[i]!= 1:
             grad = grad.sum(axis=i, keepdims=True)
+    
     return grad.reshape(shape)

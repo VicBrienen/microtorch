@@ -1,5 +1,5 @@
 import numpy as np
-import autograd as ag
+from . import autograd as ag
 
 class Tensor:
     def __init__(
@@ -67,8 +67,8 @@ class Tensor:
     def log(self):
         return apply(ag.Log, self)
     
-    def sum(self):
-        return apply(ag.Sum, self)
+    def sum(self, axis=None, keepdims=False):
+        return apply(ag.Sum, self, axis=axis, keepdims=keepdims)
     
     def __matmul__(self, other):
         return apply(ag.MatMul, self, self.ensure_tensor(other))
