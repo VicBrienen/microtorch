@@ -86,14 +86,14 @@ class MatMul(Operation):
         grad_b = np.matmul(np.swapaxes(a, -1, -2), upstream_grad) # derivative w.r.t. b before upstream_grad because matrix multiplication is not commutative
         grad_a = sum_to_shape(grad_a, a.shape)
         grad_b = sum_to_shape(grad_b, b.shape)
-        return grad_a, grad_b.T
+        return grad_a, grad_b
 
 class Transpose(Operation):
     def forward(self, a):
         return np.swapaxes(a, -1, -2)
     
     def backward(self, upstream_grad):
-        return (np.swapaxes(upstream_grad, -1, -2))
+        return (np.swapaxes(upstream_grad, -1, -2),)
     
 class Sum(Operation):
     def forward(self, a):
