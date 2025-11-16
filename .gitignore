@@ -213,3 +213,5 @@ __marimo__/
 # ignore test model
 torch_model.py
 microtorch_model.py
+
+data/
