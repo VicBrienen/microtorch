@@ -1,2 +1,2 @@
-from .optimizer import optimizer
+from .optimizer import Optimizer
 from .sgd import SGD
