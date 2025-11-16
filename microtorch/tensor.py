@@ -73,6 +73,10 @@ class Tensor:
     def __matmul__(self, other):
         return apply(ag.MatMul, self, self.ensure_tensor(other))
     
+    @property
+    def T(self):
+        return apply(ag.Transpose, self)
+    
     def maximum(self, other):
         return apply(ag.Maximum, self, self.ensure_tensor(other))
     

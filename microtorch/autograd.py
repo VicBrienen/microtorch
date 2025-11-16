@@ -87,6 +87,13 @@ class MatMul(Operation):
         grad_a = sum_to_shape(grad_a, a.shape)
         grad_b = sum_to_shape(grad_b, b.shape)
         return grad_a, grad_b
+
+class Transpose(Operation):
+    def forward(self, a):
+        return np.swapaxis(a, -1, -2)
+    
+    def backward(self, upstream_grad):
+        return (np.swapaxis(upstream_grad, -1, -2))
     
 class Sum(Operation):
     def forward(self, a):
