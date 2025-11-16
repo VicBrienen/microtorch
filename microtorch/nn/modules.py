@@ -11,8 +11,20 @@ class Module:
 
 class Linear(Module):
     def __init__(self, in_features, out_features):
-        w = np.random.randn(out_features, in_features).astype(np.float32)
-        b = np.zeros(out_features, dtype=np.float32)
+        bound = 1.0 / np.sqrt(in_features)
+
+        w = np.random.uniform(
+            low=-bound,
+            high=bound,
+            size=(out_features, in_features)
+        ).astype(np.float32)
+
+
+        b = np.random.uniform(
+            low=-bound,
+            high=bound,
+            size=(out_features,)
+        ).astype(np.float32)
 
         self.w = Tensor(w, requires_grad=True)
         self.b = Tensor(b, requires_grad=True)
