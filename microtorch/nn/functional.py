@@ -1,7 +1,7 @@
 from ..tensor import Tensor
 
 def relu(x):
-    return x.maximum(Tensor(0.0, dtype=x.dtype))
+    return x * (x > 0)
 
 def softmax(x, axis=-1):
     x_stable = x - x.max(axis=axis, keepdims=True)

@@ -79,6 +79,9 @@ class Tensor:
     def max(self, axis=None, keepdims=False):
         return apply(ag.Max, self, axis=axis, keepdims=keepdims)
     
+    def __gt__(self, other):
+        return apply(ag.Greater, self, self.ensure_tensor(other))
+    
     def __radd__(self, other):
         return self.__add__(other)
     

@@ -151,6 +151,14 @@ class Max(Operation):
         # route gradients only trough max entries
         grad_a = mask * (grad_expanded / count)
         return (grad_a,)
+
+class Greater(Operation):
+    def forward(self, a, b):
+        return a > b
+    
+    def backward(self, upstream_grad):
+        return (np.zeros_like(self.parents[0].data),
+                np.zeros_like(self.parents[1].data))
     
 def sum_to_shape(grad, shape):
     """
