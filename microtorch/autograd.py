@@ -110,18 +110,6 @@ class Sum(Operation):
         grad_a = np.broadcast_to(grad_a, input_shape)
         return (grad_a,)
 
-class Maximum(Operation):
-    def forward(self, a, b):
-        self.cache_for_backward(a, b)
-        return np.maximum(a, b)
-    
-    def backward(self, upstream_grad):
-        a, b = self.forward_cache
-        mask_a, mask_b = a >= b, a < b
-        grad_a, grad_b = upstream_grad * mask_a, upstream_grad * mask_b
-        grad_a, grad_b = sum_to_shape(grad_a, a.shape), sum_to_shape(grad_b, b.shape)
-        return grad_a, grad_b
-
 class Max(Operation):
     def forward(self, a):
         axis = self.attributes.setdefault("axis", None)
