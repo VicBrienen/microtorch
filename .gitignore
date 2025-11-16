@@ -211,4 +211,5 @@ __marimo__/
 .ipynb_checkpoints/
 
 # ignore test model
-model.py
+torch_model.py
+microtorch_model.py
