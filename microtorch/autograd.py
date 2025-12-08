@@ -190,3 +190,27 @@ def sum_to_shape(grad, shape):
             grad = grad.sum(axis=i, keepdims=True)
     
     return grad.reshape(shape)
+
+def get_im2col_indices(shape, kernel_size, stride, padding):
+    N, C, H, W = shape
+
+    # output shape of feature map
+    width_out = ((W + 2*padding - kernel_size) // stride + 1)
+    height_out = ((H + 2*padding - kernel_size) // stride + 1)
+
+    # indices inside the kernel window
+    i0 = np.tile(np.repeat(np.arange(kernel_size), kernel_size), C) # (0, 0, 0, 1, 1, 1, 2, 2, 2)
+    j0 = np.tile(np.arange(kernel_size), kernel_size * C) # (0, 1, 2, 0, 1, 2, 0, 1, 2)
+
+    # indices of operations on the input
+    i1 = stride * np.repeat(np.arange(height_out), width_out) # vertical
+    j1 = stride * np.tile(np.arange(width_out), height_out) # horizontal
+
+    # combine kernel offsets with input offsets to obtain all indices for each pixel in every window
+    i = i0.reshape(-1, 1) + i1.reshape(1, -1) # reshape for broadcasting purposes
+    j = j0.reshape(-1, 1) + j1.reshape(1, -1)
+
+    # channel indices for every pixel in a window, repeats for every window
+    k = np.repeat(np.arange(C), kernel_size**2).reshape(-1, 1)
+
+    return (k, i, j)
