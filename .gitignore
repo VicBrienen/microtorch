@@ -210,8 +210,4 @@ __marimo__/
 *.ipynb
 .ipynb_checkpoints/
 
-# ignore test model
-torch_model.py
-microtorch_model.py
-
 data/
