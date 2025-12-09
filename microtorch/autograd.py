@@ -215,9 +215,27 @@ def get_im2col_indices(shape, kernel_size, stride, padding):
 
     return (k, i, j)
 
-def im2col_indices(x, kernel_size, stride, padding):
+def im2col(x, kernel_size, stride, padding):
     x_padded = np.pad(x, ((0, 0), (0, 0), (padding, padding), (padding, padding)), mode='constant')
     k, i, j = get_im2col_indices(x.shape, kernel_size, stride, padding)
 
-    # extract columns and reshape. each column includes indices to 1 window
+    # extract columns and reshape. each column includes actual pixel values to 1 window
     return x_padded[:, k, i, j].transpose(1, 2, 0).reshape(kernel_size**2 * x.shape[1], -1)
+
+def col2im(columns, x_shape, kernel_size, stride, padding):
+    N, C, H, W = x_shape
+    k, i, j = get_im2col_indices(x_shape, kernel_size, stride, padding)
+
+    # output height and width accounting for padding
+    H_pad, W_pad = H + 2 * padding, W + 2 * padding
+
+    # initialize matrix with zeros in correct shape
+    x_pad = np.zeros((N, C, H_pad, W_pad), dtype=columns.dtype)
+
+    # reshape columns back to blocked format
+    columns_reshaped = columns.reshape(C * kernel_size**2, -1, N).transpose(2, 0, 1)
+
+    # add padding
+    np.add.at(x_pad, (slice(None), k, i, j), columns_reshaped)
+    if padding == 0: return x_pad
+    return x_pad[:, :, padding:-padding, padding:-padding]
