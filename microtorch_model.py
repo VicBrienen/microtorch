@@ -1,13 +1,12 @@
-import microtorch as mt
 import microtorch.nn as nn
 import microtorch.nn.functional as F
 
 class EfficientNet(nn.Module):
     def __init__(self):
         super().__init__()
-        # input size of CIFAR (Batch, 3, 32, 32)
-        self.conv1 = nn.Conv2D(3, 16, kernel_size=3, stride=2, padding=1) # (batch, 16, 16, 16)
-        self.conv2 = nn.Conv2D(16, 32, kernel_size=3, stride=2, padding=1) # (batch, 32, 8, 8)
+        # input size of MNIST (Batch, 1, 28, 28)
+        self.conv1 = nn.Conv2D(1, 16, kernel_size=3, stride=2, padding=1) # (batch, 16, 14, 14)
+        self.conv2 = nn.Conv2D(16, 32, kernel_size=3, stride=2, padding=1) # (batch, 32, 7, 7)
         self.conv3 = nn.Conv2D(32, 64, kernel_size=3, stride=2, padding=1) # (batch, 64, 4, 4)
         self.linear1 = nn.Linear(1024, 128) # (batch, 128)
         self.linear2 = nn.Linear(128, 10) # (batch, 10)
