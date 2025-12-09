@@ -202,7 +202,7 @@ def get_im2col_indices(shape, kernel_size, stride, padding):
     i0 = np.tile(np.repeat(np.arange(kernel_size), kernel_size), C) # (0, 0, 0, 1, 1, 1, 2, 2, 2)
     j0 = np.tile(np.arange(kernel_size), kernel_size * C) # (0, 1, 2, 0, 1, 2, 0, 1, 2)
 
-    # indices of operations on the input
+    # indices of top left of each window location
     i1 = stride * np.repeat(np.arange(height_out), width_out) # vertical
     j1 = stride * np.tile(np.arange(width_out), height_out) # horizontal
 
@@ -214,3 +214,10 @@ def get_im2col_indices(shape, kernel_size, stride, padding):
     k = np.repeat(np.arange(C), kernel_size**2).reshape(-1, 1)
 
     return (k, i, j)
+
+def im2col_indices(x, kernel_size, stride, padding):
+    x_padded = np.pad(x, ((0, 0), (0, 0), (padding, padding), (padding, padding)), mode='constant')
+    k, i, j = get_im2col_indices(x.shape, kernel_size, stride, padding)
+
+    # extract columns and reshape. each column includes indices to 1 window
+    return x_padded[:, k, i, j].transpose(1, 2, 0).reshape(kernel_size**2 * x.shape[1], -1)
