@@ -1,5 +1,6 @@
 from .. import autograd as ag
 from ..tensor import apply, Tensor
+from . import functional as F
 import numpy as np
 
 class Module:
@@ -57,9 +58,57 @@ class Conv2D(Module):
         self.w = Tensor(w.astype(np.float32), requires_grad=True)
         self.b = Tensor(b.astype(np.float32), requires_grad=True)
 
-
     def __call__(self, x):
         return apply(ag.Conv2D, x, self.w, stride=self.stride, padding=self.padding) + self.b
     
     def parameters(self):
         return [self.w, self.b]
+    
+class MultiHeadAttention(Module):
+    def __init__(self, embed_dim, num_heads):
+        super().__init__()
+        assert embed_dim % num_heads == 0 # we stick to conventional MHA design choices where embed_dim = num_heads * head_dim
+
+        self.embed_dim = embed_dim
+        self.num_heads = num_heads
+        self.head_dim = embed_dim // num_heads
+
+        # QKV and output projections
+        self.q_proj = Linear(embed_dim, embed_dim)
+        self.k_proj = Linear(embed_dim, embed_dim)
+        self.v_proj = Linear(embed_dim, embed_dim)
+        self.out_proj = Linear(embed_dim, embed_dim)
+
+    def __call__(self, q, k, v, mask=None): # mask is not strictly necessary but heavily used in NLP and self supervised CV so it is implemented
+        batch_size, seq_len, _ = q.data.shape
+
+        Q = self.q_proj(q)
+        K = self.k_proj(k)
+        V = self.v_proj(v)
+
+        # split heads and permute
+        Q = Q.reshape(batch_size, seq_len, self.num_heads, self.head_dim).permute(0, 2, 1, 3)
+        K = K.reshape(batch_size, seq_len, self.num_heads, self.head_dim).permute(0, 2, 1, 3)
+        V = V.reshape(batch_size, seq_len, self.num_heads, self.head_dim).permute(0, 2, 1, 3)
+
+        K_T = K.permute(0, 1, 3, 2)
+
+        scores = (Q @ K_T) / np.sqrt(self.head_dim)
+
+        if mask is not None:
+            scores = scores + mask
+
+        attention_weights = F.softmax(scores, axis=-1)
+
+        # multiply with value vector
+        out = attention_weights @ V
+        out = out.permute(0, 2, 1, 3)
+        out = out.reshape(batch_size, seq_len, self.embed_dim)
+
+        return self.out_proj(out)
+    
+    def parameters(self):
+        return (self.q_proj.parameters() +
+                self.k_proj.parameters() +
+                self.v_proj.parameters() +
+                self.out_proj.parameters())
