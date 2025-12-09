@@ -213,16 +213,17 @@ class Conv2D(Operation):
         return grad_x, grad_w
     
 class Reshape(Operation):
-    def forward(self, x, shape):
+    def forward(self, x):
         self.input_shape = x.shape
+        shape = self.attributes["shape"]
         return x.reshape(shape)
     
     def backward(self, upstream_grad):
         return (upstream_grad.reshape(self.input_shape),)
     
 class Permute(Operation):
-    def forward(self, x, axes):
-        self.attributes["axes"] = axes
+    def forward(self, x):
+        axes = self.attributes["axes"]
         return x.transpose(axes)
     
     def backward(self, upstream_grad):
