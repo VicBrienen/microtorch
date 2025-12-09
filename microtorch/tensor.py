@@ -73,6 +73,9 @@ class Tensor:
     def __matmul__(self, other):
         return apply(ag.MatMul, self, self.ensure_tensor(other))
     
+    def reshape(self, *shape):
+        apply(ag.Reshape, self, shape=shape)
+    
     @property
     def T(self):
         return apply(ag.Transpose, self)

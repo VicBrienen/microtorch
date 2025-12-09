@@ -211,8 +211,16 @@ class Conv2D(Operation):
         grad_x = col2im(grad_x_columns, x_shape, kernel_size, stride, padding)
 
         return grad_x, grad_w
-
     
+class Reshape(Operation):
+    def forward(self, x, shape):
+        self.input_shape = x.shape
+        return x.reshape(shape)
+    
+    def backward(self, upstream_grad):
+        return (upstream_grad.reshape(self.input_shape),)
+    
+
 def sum_to_shape(grad, shape):
     """
     Reduce a broadcasted gradient back to the original shape.
