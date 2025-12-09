@@ -11,13 +11,13 @@ class InefficientNet(nn.Module):
         self.linear1 = nn.Linear(1024, 128) # (batch, 128)
         self.linear2 = nn.Linear(128, 10) # (batch, 10)
 
-    def forward(self, x):
+    def __call__(self, x):
         x = F.relu(self.conv1(x))
         x = F.relu(self.conv2(x))
         x = F.relu(self.conv3(x))
 
         # flatten the feature map (batch, 64, 4, 4) -> (batch, 1024)
-        x = x.reshape(x.shape[0], -1)
+        x = x.reshape(x.data.shape[0], -1)
 
         x = F.relu(self.linear1(x))
         return self.linear2(x)
@@ -28,3 +28,4 @@ class InefficientNet(nn.Module):
                 self.conv3.parameters() + 
                 self.linear1.parameters() + 
                 self.linear2.parameters())
+                
