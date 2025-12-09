@@ -167,6 +167,30 @@ class Greater(Operation):
         return (np.zeros_like(self.parents[0].data),
                 np.zeros_like(self.parents[1].data))
     
+class Conv2D(Operation):
+    def forward(self, x, w):
+        N, C, H, W = x.shape
+        n_filters, _, kernel_size, _ = w.shape
+
+        # set static attributes stride and padding
+        stride = self.attributes.setdefault("stride", 1)
+        padding = self.attributes.setdefault("padding", 0)
+
+        # output shape of feature map
+        width_out = ((W + 2*padding - kernel_size) // stride + 1)
+        height_out = ((H + 2*padding - kernel_size) // stride + 1)
+
+        # extract input with weights and cache them for backwards
+        x_columns = im2col(x, kernel_size, stride, padding)
+        w_row = w.reshape(n_filters, -1)
+        self.cache_for_backward(x_columns, w_row, x.shape)
+
+        # multiply, reshape and transpose (n_filters, N * out_h * out_w) to (N, n_filters, out_h, out_w)
+        out = w_row @ x_columns
+        out.reshape(n_filters, height_out, width_out, N)
+        out.transpose(3, 0, 1, 2)
+        return out
+    
 def sum_to_shape(grad, shape):
     """
     Reduce a broadcasted gradient back to the original shape.
