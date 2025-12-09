@@ -1,7 +1,7 @@
 import microtorch.nn as nn
 import microtorch.nn.functional as F
 
-class EfficientNet(nn.Module):
+class InefficientNet(nn.Module):
     def __init__(self):
         super().__init__()
         # input size of MNIST (Batch, 1, 28, 28)
@@ -21,3 +21,10 @@ class EfficientNet(nn.Module):
 
         x = F.relu(self.linear1(x))
         return self.linear2(x)
+
+    def parameters(self):
+        return (self.conv1.parameters() + 
+                self.conv2.parameters() + 
+                self.conv3.parameters() + 
+                self.linear1.parameters() + 
+                self.linear2.parameters())
