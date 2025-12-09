@@ -187,9 +187,31 @@ class Conv2D(Operation):
 
         # multiply, reshape and transpose (n_filters, N * out_h * out_w) to (N, n_filters, out_h, out_w)
         out = w_row @ x_columns
-        out.reshape(n_filters, height_out, width_out, N)
-        out.transpose(3, 0, 1, 2)
+        out = out.reshape(n_filters, height_out, width_out, N)
+        out = out.transpose(3, 0, 1, 2)
         return out
+    
+    def backward(self, upstream_grad):
+        x_columns, w_row, x_shape = self.forward_cache
+        stride = self.attributes["stride"]
+        padding = self.attributes["padding"]
+
+        # extract kernel_size from parent weights
+        n_filters, _, kernel_size, _ = self.parents[1].data.shape
+
+        # reshape upstream gradient to match matrix multiplication output
+        grad_reshaped = upstream_grad.transpose(1, 2, 3, 0).reshape(n_filters, -1)
+
+        # gradient wrt weights
+        grad_w = grad_reshaped @ x_columns.T
+        grad_w = grad_w.reshape(self.parents[1].data.shape)
+
+        # gradient wrt inputs
+        grad_x_columns = w_row.T @ grad_reshaped
+        grad_x = col2im(grad_x_columns, x_shape, kernel_size, stride, padding)
+
+        return grad_x, grad_w
+
     
 def sum_to_shape(grad, shape):
     """
