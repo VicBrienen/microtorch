@@ -74,7 +74,10 @@ class Tensor:
         return apply(ag.MatMul, self, self.ensure_tensor(other))
     
     def reshape(self, *shape):
-        apply(ag.Reshape, self, shape=shape)
+        return apply(ag.Reshape, self, shape=shape)
+
+    def permute(self, *axes):
+        return apply(ag.Permute, self, axes=axes)
     
     @property
     def T(self):

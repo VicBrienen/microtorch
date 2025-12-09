@@ -220,6 +220,15 @@ class Reshape(Operation):
     def backward(self, upstream_grad):
         return (upstream_grad.reshape(self.input_shape),)
     
+class Permute(Operation):
+    def forward(self, x, axes):
+        self.attributes["axes"] = axes
+        return x.transpose(axes)
+    
+    def backward(self, upstream_grad):
+        axes = self.attributes["axes"]
+        inverse_axes = np.argsort(axes)
+        return (upstream_grad.transpose(inverse_axes),)
 
 def sum_to_shape(grad, shape):
     """
